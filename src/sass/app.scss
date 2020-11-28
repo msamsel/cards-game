@@ -1,0 +1,52 @@
+// Fonts
+@import url('https://fonts.googleapis.com/css?family=Nunito');
+
+// Variables
+@import 'variables';
+
+// Bootstrap
+@import '~bootstrap/scss/bootstrap';
+@import 'node_modules/bootstrap/scss/bootstrap.scss';
+@import 'node_modules/bootstrap-vue/src/index.scss';
+
+body {
+    background: $body-bg;
+}
+
+.game {
+    color: white;
+    padding-top: 50px;
+
+    .question {
+        font-size: 45px;
+        line-height: 40px;
+    }
+
+    .picking-card {
+        font-size: 25px;
+    }
+
+    .result-message {
+        padding-top: 20px;
+        font-size: 45px;
+
+        &.win {
+            color: $green;
+        }
+
+        &.loose {
+            color: $red;
+        }
+    }
+
+    .lucky {
+        padding-top: 20px;
+        font-size: 18px;
+        color: $blue;
+    }
+
+    .score-table {
+        font-size: 26px;
+    }
+
+}
