@@ -1,8 +1,7 @@
 <template>
     <div v-if="card" class="row">
         <div class="col-3">
-            <div v-show="!cardIsLoaded" class="picking-card">Picking a card...</div>
-            <img v-show="cardIsLoaded" v-bind:src="card.image" @load="onImgLoad">
+            <Card :card="card" :cardIsLoaded="cardIsLoaded"/>
         </div>
         <div class="col-3">
             <div class="question">
@@ -86,11 +85,15 @@
 <script lang="js">
 
 import VueCookies from "vue-cookies"
-
+import Card from "@/components/Card";
 const MAX_ROUNDS = 30
 
 export default {
     name: "Game",
+    components: {
+        Card
+    },
+
     data() {
         return {
             deck: [],
