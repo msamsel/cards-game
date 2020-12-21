@@ -35,6 +35,7 @@
 import CardComponent from "@/components/CardComponent";
 import ButtonsComponent from "@/components/ButtonsComponent";
 import ResultsComponent from "@/components/ResultsComponent";
+import VueCookies from "vue-cookies";
 
 export default {
     name: 'App',
@@ -48,11 +49,11 @@ export default {
             deck: [{}, {}],
             card: false,
             oldCard: false,
-            luckyMan: false,
-            luckyIndex: [2, 14],
             answer: null,
             winner: null,
-            cardIsLoaded: true
+            cardIsLoaded: true,
+            roundsHistory: [],
+            maxRounds: 20
         }
     },
     computed: {
@@ -68,7 +69,8 @@ export default {
         },
         isLuckyMan: function () {
             const newCard = this.getNewCard()
-            return this.luckyIndex.find(index => index === newCard.newCardIndex)
+            const luckyIndex = [2, 14]
+            return luckyIndex.find(index => index === newCard.newCardIndex)
         }
     },
     created: function () {
@@ -103,20 +105,17 @@ export default {
             });
         },
         results() {
-
-            console.log(this.answer)
             if (this.answer) {
                 this.makeWinner(this.answer);
-                // this.makePoints()
-                // this.createHistory()
-                // this.setCookies()
+                this.makePoints()
+                this.createHistory()
+                this.setCookies()
             }
-            //
-            // if (this.round === this.maxRounds) {
-            //     this.modalGameOver = true;
-            // }
-        },
 
+            if (this.round === this.maxRounds) {
+                this.modalGameOver = true;
+            }
+        },
         createCardObject(response) {
             this.card = {
                 image: response.data.cards[0].image,
@@ -130,7 +129,6 @@ export default {
 
             return {newCardIndex: newCardIndex, newCardObj: newCardObj}
         },
-
         getOldCard() {
             const oldCard = isNaN(this.oldCard.value) ? this.oldCard.value : parseInt(this.oldCard.value);
             const oldCardObj = this.deck.find(card => card === oldCard)
@@ -143,14 +141,12 @@ export default {
             this.answer = e
             this.oldCard = this.card
             this.card = false
-
             this.getData()
         },
+
         makeWinner: function (answer) {
             const newCard = this.getNewCard()
             const oldCard = this.getOldCard()
-
-            // this.luckyMan = this.makeLuckyMan(newCard);
 
             if (answer === 'younger') {
                 this.winner = newCard.newCardIndex < oldCard.oldCardIndex
@@ -158,9 +154,26 @@ export default {
                 this.winner = newCard.newCardIndex > oldCard.oldCardIndex
             }
         },
-        makeLuckyMan(newCard) {
-            this.luckyMan = this.luckyIndex.find(index => index === newCard.newCardIndex)
+
+        makePoints() {
+            if (this.winner) {
+                this.points = this.points + 0.1
+            }
         },
+        createHistory() {
+            const newCard = this.getNewCard()
+            const oldCard = this.getOldCard()
+
+            this.roundsHistory.push({
+                'answer': this.answer,
+                'winner': this.winner,
+                'oldCard': oldCard.oldCardObj,
+                'newCard': newCard.newCardObj
+            })
+        },
+        setCookies() {
+            VueCookies.set('roundsHistory', JSON.stringify(this.roundsHistory), "1h")
+        }
     }
 
 }
