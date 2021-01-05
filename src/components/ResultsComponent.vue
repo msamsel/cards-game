@@ -1,11 +1,19 @@
 <template>
     <div>
-        <div class="result-message" v-bind:class="[winner ? 'win' : 'loose']">
-            <span v-if="winner">You win!</span>
-            <span v-else>You loose</span>
+        <div>
+
+            <div v-if="!issEqual" class="result-message" v-bind:class="[winner ? 'win' : 'loose']">
+                <div v-if="winner">You win!</div>
+                <div v-else>You loose</div>
+            </div>
+
+            <div v-else class="lucky">
+                Cards are equal, round skipped
+            </div>
+
         </div>
 
-        <div class="lucky" v-show="isLuckyMan">
+        <div class="lucky" v-show="isLuckyMan && !issEqual">
             Instant win!
         </div>
 
@@ -19,7 +27,12 @@ export default {
     props: [
         'isLuckyMan',
         'winner'
-    ]
+    ],
+    computed: {
+        issEqual: function() {
+            return this.winner === null;
+        }
+    }
 }
 </script>
 
