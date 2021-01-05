@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div class="result-message" v-if="answer" v-bind:class="[winner ? 'win' : 'loose']">
+        <div class="result-message" v-bind:class="[winner ? 'win' : 'loose']">
             <span v-if="winner">You win!</span>
             <span v-else>You loose</span>
         </div>
@@ -13,9 +13,13 @@
 </template>
 
 <script>
+
 export default {
     name: "ResultsComponent",
-    props: ['winner', 'answer', 'isLuckyMan']
+    props: [
+        'isLuckyMan',
+        'winner'
+    ]
 }
 </script>
 
