@@ -17,6 +17,7 @@ export default {
         myHistory: function () {
             const myHistory = [...this.history]
             myHistory.shift()
+
             return myHistory
         }
     }

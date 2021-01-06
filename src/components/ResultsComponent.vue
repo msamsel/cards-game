@@ -1,10 +1,11 @@
 <template>
     <div>
         <div>
+            <div v-if="!isEqual" class="result-message">
 
-            <div v-if="!issEqual" class="result-message" v-bind:class="[winner ? 'win' : 'loose']">
-                <div v-if="winner">You win!</div>
-                <div v-else>You loose</div>
+                <div v-if="isWinner" class="win">You win!</div>
+                <div v-else class="loose">You loose</div>
+
             </div>
 
             <div v-else class="lucky">
@@ -13,7 +14,7 @@
 
         </div>
 
-        <div class="lucky" v-show="isLuckyMan && !issEqual">
+        <div class="lucky" v-show="hasLucky && !isEqual">
             Instant win!
         </div>
 
@@ -25,12 +26,28 @@
 export default {
     name: "ResultsComponent",
     props: [
-        'isLuckyMan',
-        'winner'
+        'history'
     ],
     computed: {
-        issEqual: function() {
-            return this.winner === null;
+        isWinner() {
+            const item = this.getHistoryItem()
+            return item.winner === true
+        },
+        isEqual() {
+            const item = this.getHistoryItem()
+            return item.winner === null
+        },
+        hasLucky() {
+            const item = this.getHistoryItem()
+            const luckyIndex = [2, 'ACE']
+            const cardValue = isNaN(item.card.value) ? item.card.value : parseInt(item.card.value)
+
+            return luckyIndex.find(index => index === cardValue)
+        }
+    },
+    methods: {
+        getHistoryItem() {
+            return this.history[this.history.length - 1]
         }
     }
 }

@@ -30,11 +30,11 @@ body {
         padding-top: 20px;
         font-size: 45px;
 
-        &.win {
+        .win {
             color: $green;
         }
 
-        &.loose {
+        .loose {
             color: $red;
         }
     }

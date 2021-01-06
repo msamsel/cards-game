@@ -165,7 +165,7 @@ export default {
             if (this.answer) {
                 this.makeWinner(this.answer);
                 this.makePoints()
-                this.createHistory()
+                this.addHistory()
                 this.setCookies()
             }
 
@@ -278,7 +278,7 @@ export default {
             this.canBeYounger = false
             this.canBeOlder = false
         },
-        createHistory() {
+        addHistory() {
             const newCard = this.getNewCard()
             const oldCard = this.getOldCard()
 
