@@ -37,7 +37,7 @@ export default {
     },
     methods: {
         newGame() {
-            this.$emit('game-over')
+            this.$emit('new-game')
         }
     }
 }

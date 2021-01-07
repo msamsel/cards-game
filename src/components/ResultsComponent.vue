@@ -2,22 +2,18 @@
     <div>
         <div>
             <div v-if="!isEqual" class="result-message">
-
                 <div v-if="isWinner" class="win">You win!</div>
                 <div v-else class="loose">You loose</div>
-
             </div>
 
-            <div v-else class="lucky">
+            <div v-if="isEqual && round!==0" class="lucky">
                 Cards are equal, round skipped
             </div>
-
         </div>
 
         <div class="lucky" v-show="hasLucky">
             Instant win!
         </div>
-
     </div>
 </template>
 
@@ -29,6 +25,14 @@ export default {
         'history'
     ],
     computed: {
+        round() {
+            let round = 0
+            if (this.history) {
+                round = this.history.length - 1
+            }
+
+            return round
+        },
         isWinner() {
             const item = this.getHistoryItem()
             return item.winner === true

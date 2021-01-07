@@ -46,10 +46,10 @@
            @continue-game="continueGame"
        />
 
-        <ModalGameOverComponent
-            v-bind:modalGameOver="modalContinue"
+       <ModalGameOverComponent
+            v-bind:modalGameOver="modalGameOver"
             v-bind:history="history"
-            @game-over="gameOver"
+            @new-game="cancelGame"
         />
     </div>
 </template>
@@ -67,6 +67,7 @@ import VueCookies from "vue-cookies"
 
 export default {
     name: 'App',
+
     components: {
         CardComponent: CardComponent,
         ButtonsComponent: ButtonsComponent,
@@ -76,6 +77,7 @@ export default {
         ModalContinueComponent: ModalContinueComponent,
         ModalGameOverComponent: ModalGameOverComponent
     },
+
     data() {
         return {
             maxRounds: 5,
@@ -95,6 +97,7 @@ export default {
             modalGameOver: false
         }
     },
+
     computed: {
         round() {
             let round = 0
@@ -105,11 +108,9 @@ export default {
             return round
         },
         showScores() {
-
-            if (this.round===0 && this.winner===null){
+            if (this.round === 0 && this.winner === null){
                 return false
-            } else if (this.answer || this.winner===null) {
-
+            } else if (this.answer && this.round > 0 || this.winner === null && this.round > 0) {
                 return true
             }
 
@@ -126,6 +127,7 @@ export default {
             this.getData()
         }
     },
+
     methods: {
         createDeck() {
             const deck = [{}, {}]
@@ -187,14 +189,12 @@ export default {
             const history = VueCookies.get('history');
             return JSON.parse(history)
         },
-        roundResult: function () {
-            if (this.round <= this.maxRounds) {
-                this.winner = this.isWinner()
-                this.updateHistory()
-                this.setCookies()
-            } else {
-                this.newGame()
-            }
+        roundResult () {
+
+            this.winner = this.isWinner()
+            this.updateHistory()
+            this.setCookies()
+
         },
         isWinner() {
             const oldCard = this.getOldCard()
@@ -256,6 +256,8 @@ export default {
 
         },
         gameOver() {
+            console.log('game over')
+            this.modalGameOver = true
             this.cancelGame()
         },
         cancelGame() {
@@ -268,7 +270,6 @@ export default {
 
         }
     }
-
 }
 </script>
 
