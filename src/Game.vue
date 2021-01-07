@@ -20,7 +20,7 @@
                     />
                 </div>
 
-                <div v-if="answer && cardIsLoaded">
+                <div v-if="cardIsLoaded">
                     <ResultsComponent
                         v-bind:history="history"
                     />
@@ -48,6 +48,8 @@
 
         <ModalGameOverComponent
             v-bind:modalGameOver="modalContinue"
+            v-bind:history="history"
+            @game-over="gameOver"
         />
     </div>
 </template>
@@ -76,7 +78,7 @@ export default {
     },
     data() {
         return {
-            maxRounds: 20,
+            maxRounds: 5,
             showTable: false,
             deck: null,
             card: false,
@@ -103,18 +105,18 @@ export default {
             return round
         },
         showScores() {
+
             if (this.round===0 && this.winner===null){
                 return false
-            } else if (this.answer) {
+            } else if (this.answer || this.winner===null) {
+
                 return true
             }
 
             return false
         }
     },
-    watch: {
 
-    },
     created: function () {
         this.createDeck()
         this.modalContinue = VueCookies.isKey('history')
@@ -186,10 +188,13 @@ export default {
             return JSON.parse(history)
         },
         roundResult: function () {
-            this.winner = this.isWinner()
-
-            this.updateHistory()
-            this.setCookies()
+            if (this.round <= this.maxRounds) {
+                this.winner = this.isWinner()
+                this.updateHistory()
+                this.setCookies()
+            } else {
+                this.newGame()
+            }
         },
         isWinner() {
             const oldCard = this.getOldCard()
@@ -250,6 +255,9 @@ export default {
             }
 
         },
+        gameOver() {
+            this.cancelGame()
+        },
         cancelGame() {
             VueCookies.remove('history')
             this.history = []
@@ -258,15 +266,7 @@ export default {
             this.modalContinue = false
             this.getData()
 
-        },
-        newGame() {
-            VueCookies.remove('history')
-            this.history = []
-            this.answer = null
-            this.showTable = true
-            this.modalGameOver = false
-        },
-
+        }
     }
 
 }

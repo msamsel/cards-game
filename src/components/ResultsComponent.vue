@@ -14,7 +14,7 @@
 
         </div>
 
-        <div class="lucky" v-show="hasLucky && !isEqual">
+        <div class="lucky" v-show="hasLucky">
             Instant win!
         </div>
 

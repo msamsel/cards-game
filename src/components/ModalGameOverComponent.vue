@@ -1,9 +1,9 @@
 <template>
     <b-modal
-        v-model="modalGameOver"
-        title="Game Over"
-        hide-header
-        no-close-on-backdrop
+            v-model="modalGameOver"
+            title="Game Over"
+            hide-header
+            no-close-on-backdrop
     >
         <h4 class="pt-3">Game Over<br>You get {{ myPoints }} points</h4>
 
@@ -18,7 +18,28 @@
 
 <script>
 export default {
-name: "ModalGameOverComponent"
+    name: "ModalGameOverComponent",
+    props: [
+        'modalGameOver',
+        'history'
+    ],
+    computed: {
+        myPoints: function () {
+            let points = 0
+            this.history.forEach((item) => {
+                if (item.winner) {
+                    points += 0.1
+                }
+            })
+
+            return points.toFixed(1)
+        },
+    },
+    methods: {
+        newGame() {
+            this.$emit('game-over')
+        }
+    }
 }
 </script>
 
