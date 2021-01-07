@@ -30,7 +30,7 @@ export default {
             return points.toFixed(1)
         },
         myRound() {
-            return this.history.length - 1
+            return this.history.length
         }
     }
 }

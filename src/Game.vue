@@ -16,13 +16,18 @@
                 <div class="pt-3">
                     <ButtonsComponent
                         v-bind:card="card"
-                        @user-answer="takeAnswer"
+                        @user-answer="setAnswer"
                     />
                 </div>
 
                 <div v-if="cardIsLoaded">
                     <ResultsComponent
+                        v-if="answer"
                         v-bind:history="history"
+                    />
+                    <MessageComponent
+                        v-bind:has-lucky="hasLucky"
+                        v-bind:is-equal="cardsEqual"
                     />
                 </div>
             </div>
@@ -49,7 +54,7 @@
        <ModalGameOverComponent
             v-bind:modalGameOver="modalGameOver"
             v-bind:history="history"
-            @new-game="cancelGame"
+            @new-game="newGame"
         />
     </div>
 </template>
@@ -60,6 +65,7 @@ import CardComponent from "@/components/CardComponent";
 import ButtonsComponent from "@/components/ButtonsComponent";
 import ResultsComponent from "@/components/ResultsComponent";
 import RoundHistoryComponent from "@/components/RoundHistoryComponent"
+import MessageComponent from "@/components/MessageComponent";
 import ScoreTableComponent from "@/components/ScoreTableComponent";
 import ModalContinueComponent from "@/components/ModalContinueComponent";
 import ModalGameOverComponent from "@/components/ModalGameOverComponent";
@@ -75,42 +81,60 @@ export default {
         RoundHistoryComponent: RoundHistoryComponent,
         ScoreTableComponent: ScoreTableComponent,
         ModalContinueComponent: ModalContinueComponent,
-        ModalGameOverComponent: ModalGameOverComponent
+        ModalGameOverComponent: ModalGameOverComponent,
+        MessageComponent: MessageComponent
     },
 
     data() {
         return {
             maxRounds: 5,
-            showTable: false,
             deck: null,
+            gameRound: 0,
             card: false,
+            oldCard: false,
             answer: null,
             winner: null,
-            cardIsLoaded: false,
-            roundsHistory: [],
             history: [],
+            showTable: false,
+            cardIsLoaded: false,
+            modalContinue: false,
             acceptedAnswers: {
                 younger: 'younger',
                 older: 'older'
-            },
-            modalContinue: false,
-            modalGameOver: false
+            }
         }
     },
 
     computed: {
-        round() {
-            let round = 0
-            if (this.history) {
-                round = this.history.length - 1
+        cardsEqual() {
+            const item = this.getHistoryItem()
+            if (item) {
+                return item.winner === null
             }
 
-            return round
+            return false
+        },
+        hasLucky() {
+            const item = this.getHistoryItem()
+            const luckyIndex = [2, 'ACE']
+            if (item) {
+                const cardValue = isNaN(item.card.value) ? item.card.value : parseInt(item.card.value)
+                return luckyIndex.find(index => index === cardValue)
+            }
+
+            return false
         },
         showScores() {
-            if (this.round === 0 && this.winner === null){
+            if (this.gameRound === 0 && this.winner === null){
                 return false
-            } else if (this.answer && this.round > 0 || this.winner === null && this.round > 0) {
+            } else if (this.answer && this.gameRound > 0 || this.winner === null && this.gameRound > 0) {
+                return true
+            }
+
+            return false
+        },
+        modalGameOver() {
+            if (this.gameRound === this.maxRounds && this.cardIsLoaded) {
                 return true
             }
 
@@ -120,7 +144,7 @@ export default {
 
     created: function () {
         this.createDeck()
-        this.modalContinue = VueCookies.isKey('history')
+        this.modalContinue = this.isCookies()
 
         if (!this.modalContinue) {
             this.showTable = true
@@ -138,6 +162,7 @@ export default {
 
             this.deck = deck
         },
+
         getData() {
             const param = {
                 url: 'https://deckofcardsapi.com/api/deck/new/draw/?count=1',
@@ -147,83 +172,98 @@ export default {
             // eslint-disable-next-line no-undef
             axios(param)
                 .then(response => {
-                    this.createCardObject(response)
-                    this.addHistory()
-
+                    this.setCard(response)
+                    
                     if (this.answer) {
                         this.roundResult()
                     }
-
                 }).catch(error => {
                     console.info(error)
                 })
         },
         loadData() {
-            this.history = this.getHistory()
-
-            const lastItem = this.history[this.history.length - 1]
+            this.loadHistory()
+            const lastItem = this.getHistoryItem()
+            
+            this.gameRound = lastItem.gameRound
             this.card = lastItem.card
+            this.oldCard = lastItem.oldCard
             this.answer = lastItem.answer
             this.winner = lastItem.winner
         },
-        createCardObject(response) {
+
+        roundResult () {
+            this.addRound()
+            this.setWinner()
+            this.setHistory()
+            this.setCookies()
+        },
+
+        setHistory() {
+            this.history.push({
+                gameRound: this.getRound(),
+                card: this.getCard(),
+                oldCard: this.getOldCard(),
+                winner: this.getWinner(),
+                answer: this.getAnswer()
+            })
+        },
+        getHistory() {
+            const history = this.getCookies()
+            return JSON.parse(history)
+        },
+        loadHistory() {
+            this.history = this.getHistory()
+        },
+        getHistoryItem(gameRound = false) {
+            if (!gameRound) {
+                gameRound = this.history.length - 1
+            }
+            return this.history[gameRound]
+        },
+
+        setWinner() {
+            const newCard = this.getCard()
+            const newCardIndex = this.getCardIndex(newCard)
+
+            const oldCard = this.getOldCard()
+            const oldCardIndex = this.getCardIndex(oldCard)
+
+            if (oldCardIndex === newCardIndex) {
+                this.winner = null
+            }
+
+            switch (this.answer) {
+                case this.acceptedAnswers.younger:
+                    this.winner = newCardIndex < oldCardIndex
+                    break
+                case this.acceptedAnswers.older:
+                    this.winner =  newCardIndex > oldCardIndex
+                    break
+            }
+        },
+        getWinner() {
+            return this.winner
+        },
+
+        addRound() {
+            this.gameRound++
+        },
+        getRound() {
+            return this.gameRound
+        },
+
+        setCard(response) {
             this.card = {
                 image: response.data.cards[0].image,
                 value: response.data.cards[0].value
             }
         },
-        addHistory() {
-            this.history.push({
-                card: this.card,
-                oldCard: null,
-                winner: null
-            })
-        },
-        updateHistory() {
-            const index = this.round
-            this.history[index].oldCard = this.getOldCard()
-            this.history[index].winner = this.winner
-            this.history[index].answer = this.answer
-        },
-        getHistory() {
-            const history = VueCookies.get('history');
-            return JSON.parse(history)
-        },
-        roundResult () {
-
-            this.winner = this.isWinner()
-            this.updateHistory()
-            this.setCookies()
-
-        },
-        isWinner() {
-            const oldCard = this.getOldCard()
-            const oldCardIndex = this.getCardIndex(oldCard)
-
-            const newCard = this.getNewCard()
-            const newCardIndex = this.getCardIndex(newCard)
-
-            if (oldCardIndex === newCardIndex) {
-                this.history.pop()
-                return null
-            }
-
-            switch (this.answer) {
-                case this.acceptedAnswers.younger:
-                    return newCardIndex < oldCardIndex
-                case this.acceptedAnswers.older:
-                    return newCardIndex > oldCardIndex
-            }
+        getCard() {
+            return this.card
         },
         getOldCard() {
-            const historyItem = this.history[this.history.length - 2]
-
-            return historyItem.card
-        },
-        getNewCard() {
-            const historyItem = this.history[this.history.length - 1]
-
-            return historyItem.card
+            return this.oldCard
         },
         getCardIndex(card) {
             const cardValue = isNaN(card.value) ? card.value : parseInt(card.value)
@@ -231,19 +271,35 @@ export default {
 
             return this.deck.indexOf(cardObj)
         },
-        takeAnswer(e) {
-            this.answer = e
-            this.card = false
-            this.cardIsLoaded = false
-            this.getData()
-        },
         setCardIsLoaded() {
             this.cardIsLoaded = true
         },
+
+        setAnswer(e) {
+            this.answer = e
+
+            this.oldCard = this.card
+            this.card = false
+            this.cardIsLoaded = false
+
+            this.getData()
+        },
+        getAnswer() {
+            return this.answer
+        },
+
         setCookies() {
             VueCookies.set('history', JSON.stringify(this.history), "1h")
         },
-
+        getCookies() {
+            return VueCookies.get('history')
+        },
+        isCookies() {
+            return VueCookies.isKey('history')
+        },
+        removeCookies() {
+            VueCookies.remove('history')
+        },
 
         continueGame(e) {
             if (e) {
@@ -251,23 +307,24 @@ export default {
                 this.modalContinue = false
                 this.showTable = true
             } else {
-                this.cancelGame()
+                this.resetGame()
+                this.removeCookies()
+                this.getData()
             }
-
         },
-        gameOver() {
-            console.log('game over')
-            this.modalGameOver = true
-            this.cancelGame()
-        },
-        cancelGame() {
-            VueCookies.remove('history')
-            this.history = []
-            this.answer = null
-            this.showTable = true
-            this.modalContinue = false
+        
+        newGame() {
+            this.resetGame()
+            this.removeCookies()
             this.getData()
-
+        },
+        resetGame() {
+            this.gameRound = 0
+            this.card = false
+            this.oldCard =  false
+            this.answer = null
+            this.winner = null
+            this.history = []
         }
     }
 }
