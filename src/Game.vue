@@ -5,7 +5,7 @@
             <div class="col-3">
                 <CardComponent
                     v-bind:card="card"
-                    @is-loaded="setCardIsLoaded"
+                    @is-loaded="setCardIsLoaded(true)"
                 />
             </div>
             <div class="col-3">
@@ -16,18 +16,18 @@
                 <div class="pt-3">
                     <ButtonsComponent
                         v-bind:card="card"
-                        @user-answer="setAnswer"
+                        @user-answer="prepareAnswer"
                     />
                 </div>
 
                 <div v-if="cardIsLoaded">
                     <ResultsComponent
-                        v-if="answer"
+                        v-if="!cardsAreEqual && answer"
                         v-bind:history="history"
                     />
                     <MessageComponent
                         v-bind:has-lucky="hasLucky"
-                        v-bind:is-equal="cardsEqual"
+                        v-bind:is-equal="cardsAreEqual"
                     />
                 </div>
             </div>
@@ -38,7 +38,6 @@
                         v-bind:history="history"
                         v-bind:maxRounds="maxRounds"
                     />
-
                     <ScoreTableComponent
                         v-bind:history="history"
                     />
@@ -87,7 +86,7 @@ export default {
 
     data() {
         return {
-            maxRounds: 5,
+            maxRounds: 150,
             deck: null,
             gameRound: 0,
             card: false,
@@ -95,6 +94,8 @@ export default {
             answer: null,
             winner: null,
             history: [],
+            cardsStack: [],
+
             showTable: false,
             cardIsLoaded: false,
             modalContinue: false,
@@ -106,13 +107,12 @@ export default {
     },
 
     computed: {
-        cardsEqual() {
-            const item = this.getHistoryItem()
-            if (item) {
-                return item.winner === null
-            }
+        cardsAreEqual() {
+            const stack = this.getCardsStack()
+            const card = stack[stack.length - 1]
+            const oldCard = stack[stack.length - 2]
 
-            return false
+            return oldCard && card.value === oldCard.value;
         },
         hasLucky() {
             const item = this.getHistoryItem()
@@ -134,11 +134,7 @@ export default {
             return false
         },
         modalGameOver() {
-            if (this.gameRound === this.maxRounds && this.cardIsLoaded) {
-                return true
-            }
-
-            return false
+            return this.gameRound === this.maxRounds && this.cardIsLoaded;
         }
     },
 
@@ -147,7 +143,7 @@ export default {
         this.modalContinue = this.isCookies()
 
         if (!this.modalContinue) {
-            this.showTable = true
+            this.setShowTable(true)
             this.getData()
         }
     },
@@ -162,7 +158,6 @@ export default {
 
             this.deck = deck
         },
-
         getData() {
             const param = {
                 url: 'https://deckofcardsapi.com/api/deck/new/draw/?count=1',
@@ -172,9 +167,10 @@ export default {
             // eslint-disable-next-line no-undef
             axios(param)
                 .then(response => {
-                    this.setCard(response)
-                    
-                    if (this.answer) {
+                    const card = this.createCard(response)
+                    this.addToCardsStack(card)
+
+                    if (this.getAnswer()) {
                         this.roundResult()
                     }
                 }).catch(error => {
@@ -184,24 +180,27 @@ export default {
         loadData() {
             this.loadHistory()
             const lastItem = this.getHistoryItem()
-            
-            this.gameRound = lastItem.gameRound
-            this.card = lastItem.card
-            this.oldCard = lastItem.oldCard
-            this.answer = lastItem.answer
-            this.winner = lastItem.winner
+
+            this.setGameRound(lastItem.gameRound)
+            this.setCard(lastItem.card)
+            this.setOldCard(lastItem.oldCard)
+            this.setAnswer(lastItem.answer)
+            this.setWinner(lastItem.winner)
         },
 
         roundResult () {
-            this.addRound()
-            this.setWinner()
-            this.setHistory()
-            this.setCookies()
+            if (!this.cardsAreEqual) {
+                this.addGameRound()
+                this.makeWinner()
+                this.setHistory()
+                this.setCookies()
+                this.setShowResult(true)
+            }
         },
 
         setHistory() {
             this.history.push({
-                gameRound: this.getRound(),
+                gameRound: this.getGameRound(),
                 card: this.getCard(),
                 oldCard: this.getOldCard(),
                 winner: this.getWinner(),
@@ -211,6 +210,9 @@ export default {
         getHistory() {
             const history = this.getCookies()
             return JSON.parse(history)
+        },
+        resetHistory() {
+            this.history = []
         },
         loadHistory() {
             this.history = this.getHistory()
@@ -222,7 +224,7 @@ export default {
             return this.history[gameRound]
         },
 
-        setWinner() {
+        makeWinner() {
             const newCard = this.getCard()
             const newCardIndex = this.getCardIndex(newCard)
 
@@ -230,37 +232,51 @@ export default {
             const oldCardIndex = this.getCardIndex(oldCard)
 
             if (oldCardIndex === newCardIndex) {
-                this.winner = null
+                this.setWinner(null)
             }
 
-            switch (this.answer) {
+            switch (this.getAnswer()) {
                 case this.acceptedAnswers.younger:
-                    this.winner = newCardIndex < oldCardIndex
+                    this.setWinner(newCardIndex < oldCardIndex)
                     break
                 case this.acceptedAnswers.older:
-                    this.winner =  newCardIndex > oldCardIndex
+                    this.setWinner(newCardIndex > oldCardIndex)
                     break
             }
+        },
+        setWinner(winner) {
+            this.winner = winner
         },
         getWinner() {
             return this.winner
         },
 
-        addRound() {
+        addGameRound() {
             this.gameRound++
         },
-        getRound() {
+        setGameRound(gameRound) {
+            this.gameRound = gameRound
+        },
+        getGameRound() {
             return this.gameRound
         },
 
-        setCard(response) {
+        createCard(response) {
             this.card = {
                 image: response.data.cards[0].image,
                 value: response.data.cards[0].value
             }
+
+            return this.card
+        },
+        setCard(card) {
+            this.card = card
         },
         getCard() {
             return this.card
+        },
+        setOldCard(card) {
+            this.oldCard = card
         },
         getOldCard() {
             return this.oldCard
@@ -271,21 +287,32 @@ export default {
 
             return this.deck.indexOf(cardObj)
         },
-        setCardIsLoaded() {
-            this.cardIsLoaded = true
+        setCardIsLoaded(loaded) {
+            this.cardIsLoaded = loaded
         },
 
-        setAnswer(e) {
-            this.answer = e
+        addToCardsStack(card) {
+            this.cardsStack.push(card)
+        },
+        getCardsStack() {
+            return this.cardsStack
+        },
+        // getCardFromStack(index) {
+        //     return this.cardsStack[index]
+        // },
 
-            this.oldCard = this.card
-            this.card = false
-            this.cardIsLoaded = false
-
-            this.getData()
+        setAnswer(answer) {
+            this.answer = answer
         },
         getAnswer() {
             return this.answer
+        },
+        prepareAnswer(answer) {
+            this.setAnswer(answer)
+            this.setOldCard(this.card)
+            this.setCard(false)
+            this.setCardIsLoaded(false)
+            this.getData()
         },
 
         setCookies() {
@@ -302,30 +329,41 @@ export default {
         },
 
         continueGame(e) {
+            this.setShowModalContinue(false)
+            this.setShowTable(true)
+
             if (e) {
                 this.loadData()
-                this.modalContinue = false
-                this.showTable = true
             } else {
                 this.resetGame()
                 this.removeCookies()
                 this.getData()
             }
         },
-        
         newGame() {
             this.resetGame()
             this.removeCookies()
             this.getData()
         },
         resetGame() {
-            this.gameRound = 0
-            this.card = false
-            this.oldCard =  false
-            this.answer = null
-            this.winner = null
-            this.history = []
-        }
+            this.setGameRound(0)
+            this.setCard(false)
+            this.setOldCard(false)
+            this.setAnswer(null)
+            this.setWinner(null)
+            this.resetHistory(null)
+        },
+
+        setShowTable(show) {
+            this.showTable = show
+        },
+        setShowResult(show) {
+            this.showResult = show
+        },
+        setShowModalContinue(show) {
+            this.modalContinue = show
+        },
+
     }
 }
 </script>
