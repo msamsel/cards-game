@@ -34,10 +34,10 @@ export default {
     },
     computed: {
         canBeYounger: function () {
-            return this.card ? this.card.value !== this.minCard : false;
+            return this.card ? this.card.value !== this.minCard : false
         },
         canBeOlder: function () {
-            return this.card ? this.card.value !== this.maxCard : false;
+            return this.card ? this.card.value !== this.maxCard : false
         }
     },
     methods: {
