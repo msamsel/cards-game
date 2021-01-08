@@ -145,7 +145,7 @@ export default {
         this.modalContinue = this.isCookies()
 
         if (!this.modalContinue) {
-            this.setShowTable(true)
+            this.setShowGameTable(true)
             this.getData()
         }
     },
@@ -196,7 +196,6 @@ export default {
                 this.makeWinner()
                 this.setHistory()
                 this.setCookies()
-                this.setShowResult(true)
             }
         },
 
@@ -286,7 +285,7 @@ export default {
         getCardIndex(card) {
             const cardValue = isNaN(card.value) ? card.value : parseInt(card.value)
             const cardObj = this.deck.find(myCard => myCard === cardValue)
-
+            
             return this.deck.indexOf(cardObj)
         },
         setCardIsLoaded(loaded) {
@@ -327,11 +326,11 @@ export default {
             VueCookies.remove('history')
         },
 
-        continueGame(e) {
+        continueGame(continueGame) {
             this.setShowModalContinue(false)
-            this.setShowTable(true)
+            this.setShowGameTable(true)
 
-            if (e) {
+            if (continueGame) {
                 this.loadData()
             } else {
                 this.resetGame()
@@ -353,11 +352,8 @@ export default {
             this.resetHistory(null)
         },
 
-        setShowTable(show) {
+        setShowGameTable(show) {
             this.showGameTable = show
-        },
-        setShowResult(show) {
-            this.showResult = show
         },
         setShowModalContinue(show) {
             this.modalContinue = show
