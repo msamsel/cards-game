@@ -18,7 +18,7 @@
 
 <script>
 export default {
-    name: "ModalGameOverComponent",
+    name: 'ModalGameOverComponent',
     props: [
         'modalGameOver',
         'history'

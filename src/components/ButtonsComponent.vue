@@ -22,10 +22,8 @@
 
 <script>
 export default {
-    name: "ButtonsComponent",
-    props: [
-        'card',
-    ],
+    name: 'ButtonsComponent',
+    props: ['card'],
     data() {
         return {
             minCard: '2',

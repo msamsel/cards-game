@@ -19,14 +19,13 @@
 
 <script>
 export default {
-    name: "ModalContinueComponent",
+    name: 'ModalContinueComponent',
     props: ['modalContinue'],
     methods: {
         giveAnswer(answer) {
             this.$emit('continue-game', answer)
         }
     }
-
 }
 </script>
 

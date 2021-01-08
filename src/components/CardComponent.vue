@@ -8,7 +8,7 @@
 <script>
 
 export default {
-    name: "CardComponent",
+    name: 'CardComponent',
     props: ['card'],
     computed: {
         cardIsLoaded() {
@@ -17,7 +17,7 @@ export default {
     },
     methods: {
         loaded() {
-            this.$emit('is-loaded')
+            this.$emit('card-is-loaded')
         }
     }
 }

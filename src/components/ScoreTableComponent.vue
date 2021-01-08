@@ -9,10 +9,8 @@
 
 <script>
 export default {
-    name: "ScoreTableComponent",
-    props: [
-        'history'
-    ]
+    name: 'ScoreTableComponent',
+    props: ['history']
 }
 </script>
 

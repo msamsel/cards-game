@@ -5,7 +5,7 @@
             <div class="col-3">
                 <CardComponent
                     v-bind:card="card"
-                    @is-loaded="setCardIsLoaded(true)"
+                    @card-is-loaded="setCardIsLoaded(true)"
                 />
             </div>
             <div class="col-3">

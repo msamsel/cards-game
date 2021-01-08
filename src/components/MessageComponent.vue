@@ -12,7 +12,7 @@
 
 <script>
 export default {
-    name: "MessageComponent",
+    name: 'MessageComponent',
     props: [
         'isEqual',
         'hasLucky'

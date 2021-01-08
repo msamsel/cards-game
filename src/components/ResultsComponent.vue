@@ -8,10 +8,8 @@
 <script>
 
 export default {
-    name: "ResultsComponent",
-    props: [
-        'history'
-    ],
+    name: 'ResultsComponent',
+    props: ['history'],
     computed: {
         round() {
             let round = 0
