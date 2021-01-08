@@ -22,7 +22,7 @@
 
                 <div v-if="cardIsLoaded">
                     <ResultsComponent
-                        v-if="!cardsAreEqual"
+                        v-if="!cardsAreEqual && gameRound"
                         v-bind:history="history"
                     />
                     <MessageComponent
