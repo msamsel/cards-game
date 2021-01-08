@@ -1,10 +1,10 @@
 <template>
     <div>
-        <div v-if="isEqual" class="lucky">
+        <div v-show="isEqual" class="lucky">
             Cards are equal, round skipped
         </div>
 
-        <div class="lucky" v-show="hasLucky">
+        <div v-show="hasLucky" class="lucky" >
             Instant win!
         </div>
     </div>

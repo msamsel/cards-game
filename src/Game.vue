@@ -1,7 +1,7 @@
 <template>
     <div id="app" class="container game">
 
-        <div class="row" v-if="showTable">
+        <div class="row" v-if="showGameTable">
             <div class="col-3">
                 <CardComponent
                     v-bind:card="card"
@@ -22,7 +22,7 @@
 
                 <div v-if="cardIsLoaded">
                     <ResultsComponent
-                        v-if="!cardsAreEqual && answer"
+                        v-if="!cardsAreEqual"
                         v-bind:history="history"
                     />
                     <MessageComponent
@@ -86,7 +86,7 @@ export default {
 
     data() {
         return {
-            maxRounds: 150,
+            maxRounds: 20,
             deck: null,
             gameRound: 0,
             card: false,
@@ -96,7 +96,7 @@ export default {
             history: [],
             cardsStack: [],
 
-            showTable: false,
+            showGameTable: false,
             cardIsLoaded: false,
             modalContinue: false,
             acceptedAnswers: {
@@ -112,13 +112,15 @@ export default {
             const card = stack[stack.length - 1]
             const oldCard = stack[stack.length - 2]
 
-            return oldCard && card.value === oldCard.value;
+            return oldCard && card.value === oldCard.value
         },
         hasLucky() {
-            const item = this.getHistoryItem()
+            const stack = this.getCardsStack()
+            const card = stack[stack.length - 1]
             const luckyIndex = [2, 'ACE']
-            if (item) {
-                const cardValue = isNaN(item.card.value) ? item.card.value : parseInt(item.card.value)
+            
+            if (card) {
+                const cardValue = isNaN(card.value) ? card.value : parseInt(card.value)
                 return luckyIndex.find(index => index === cardValue)
             }
 
@@ -297,9 +299,6 @@ export default {
         getCardsStack() {
             return this.cardsStack
         },
-        // getCardFromStack(index) {
-        //     return this.cardsStack[index]
-        // },
 
         setAnswer(answer) {
             this.answer = answer
@@ -355,7 +354,7 @@ export default {
         },
 
         setShowTable(show) {
-            this.showTable = show
+            this.showGameTable = show
         },
         setShowResult(show) {
             this.showResult = show
