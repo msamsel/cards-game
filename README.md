@@ -1,7 +1,7 @@
 ## Game rules:
 
 - Player has one card at a time
-- There are two buttons that the player uses to decide whether the next card/dice number will be higher or lower 
+- There are two buttons that the player uses to decide whether the next card number will be higher or lower 
 - Once the player chooses one of the options, he/she gets 0.1 point for the correct answer, and a new dice/card is shown
 - There should be 30 rounds of the game
 
